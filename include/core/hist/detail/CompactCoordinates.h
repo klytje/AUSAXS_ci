@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <hist/detail/CompactCoordinatesData.h>
+#include <hist/detail/data/CompactCoordinatesXYZW.h>
 #include <data/Body.h>
 #include <constants/Constants.h>
 #include <utility/Concepts.h>
@@ -55,14 +55,14 @@ namespace ausaxs::hist::detail {
 
             std::size_t size() const;
 
-            std::vector<CompactCoordinatesData>& get_data();
-            const std::vector<CompactCoordinatesData>& get_data() const;
+            std::vector<CompactCoordinatesXYZW>& get_data();
+            const std::vector<CompactCoordinatesXYZW>& get_data() const;
 
-            CompactCoordinatesData& operator[](unsigned int i);
-            const CompactCoordinatesData& operator[](unsigned int i) const;
+            CompactCoordinatesXYZW& operator[](unsigned int i);
+            const CompactCoordinatesXYZW& operator[](unsigned int i) const;
 
         protected: 
-            std::vector<CompactCoordinatesData> data;
+            std::vector<CompactCoordinatesXYZW> data;
     };
     static_assert(supports_nothrow_move_v<CompactCoordinates>, "CompactCoordinates should support nothrow move semantics.");
 }
@@ -76,13 +76,13 @@ namespace ausaxs::hist::detail {
 inline ausaxs::hist::detail::CompactCoordinates::CompactCoordinates(unsigned int size) : data(size) {}
 
 inline ausaxs::hist::detail::CompactCoordinates::CompactCoordinates(std::vector<Vector3<double>>&& coordinates, double weight) : data(coordinates.size()) {
-    std::transform(coordinates.begin(), coordinates.end(), data.begin(), [weight] (const Vector3<double>& v) {return CompactCoordinatesData(v, weight);});
+    std::transform(coordinates.begin(), coordinates.end(), data.begin(), [weight] (const Vector3<double>& v) {return CompactCoordinatesXYZW(v, weight);});
 }
 
 inline ausaxs::hist::detail::CompactCoordinates::CompactCoordinates(const std::vector<data::AtomFF>& atoms) : data(atoms.size()) {
     for (unsigned int i = 0; i < size(); ++i) {
         const auto& a = atoms[i]; 
-        data[i] = CompactCoordinatesData(a.coordinates(), a.weight());
+        data[i] = CompactCoordinatesXYZW(a.coordinates(), a.weight());
     }
 }
 
@@ -90,7 +90,7 @@ inline ausaxs::hist::detail::CompactCoordinates::CompactCoordinates(const std::v
     unsigned int i = 0;
     for (const auto& body : bodies) {
         for (const auto& a : body.get_atoms()) {
-            data[i++] = CompactCoordinatesData(a.coordinates(), a.weight());
+            data[i++] = CompactCoordinatesXYZW(a.coordinates(), a.weight());
         }
     }
 }
@@ -98,22 +98,22 @@ inline ausaxs::hist::detail::CompactCoordinates::CompactCoordinates(const std::v
 inline ausaxs::hist::detail::CompactCoordinates::CompactCoordinates(const std::vector<data::Water>& atoms) : data(atoms.size()) {
     for (unsigned int i = 0; i < size(); ++i) {
         const auto& a = atoms[i]; 
-        data[i] = CompactCoordinatesData(a.coordinates(), a.weight());
+        data[i] = CompactCoordinatesXYZW(a.coordinates(), a.weight());
     }
 }
 
 inline void ausaxs::hist::detail::CompactCoordinates::implicit_excluded_volume(double volume_per_atom) {
     double displaced_charge = constants::charge::density::water*volume_per_atom;
     double charge_per_atom = -displaced_charge;
-    std::for_each(data.begin(), data.end(), [charge_per_atom] (CompactCoordinatesData& d) {d.value.w += charge_per_atom;});
+    std::for_each(data.begin(), data.end(), [charge_per_atom] (CompactCoordinatesXYZW& d) {d.value.w += charge_per_atom;});
 }
 
-inline std::vector<ausaxs::hist::detail::CompactCoordinatesData>& ausaxs::hist::detail::CompactCoordinates::get_data() {return data;}
+inline std::vector<ausaxs::hist::detail::CompactCoordinatesXYZW>& ausaxs::hist::detail::CompactCoordinates::get_data() {return data;}
 
-inline const std::vector<ausaxs::hist::detail::CompactCoordinatesData>& ausaxs::hist::detail::CompactCoordinates::get_data() const {return data;}
+inline const std::vector<ausaxs::hist::detail::CompactCoordinatesXYZW>& ausaxs::hist::detail::CompactCoordinates::get_data() const {return data;}
 
 inline std::size_t ausaxs::hist::detail::CompactCoordinates::size() const {return data.size();}
 
-inline ausaxs::hist::detail::CompactCoordinatesData& ausaxs::hist::detail::CompactCoordinates::operator[](unsigned int i) {return data[i];}
+inline ausaxs::hist::detail::CompactCoordinatesXYZW& ausaxs::hist::detail::CompactCoordinates::operator[](unsigned int i) {return data[i];}
 
-inline const ausaxs::hist::detail::CompactCoordinatesData& ausaxs::hist::detail::CompactCoordinates::operator[](unsigned int i) const {return data[i];}
+inline const ausaxs::hist::detail::CompactCoordinatesXYZW& ausaxs::hist::detail::CompactCoordinates::operator[](unsigned int i) const {return data[i];}
