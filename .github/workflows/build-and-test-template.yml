@@ -91,7 +91,6 @@ jobs:
             build/bin/*
 
   build-mac:
-    if: false
     name: "MacOS universal"
     needs: check-headers
     runs-on: macos-latest
