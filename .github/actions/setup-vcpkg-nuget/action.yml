@@ -11,7 +11,7 @@ inputs:
     required: true
     description: "Path to nuget.exe"
   username:
-    required: true
+    required: false
     description: "Username for the feed"
   packageaccess:
     required: false
@@ -29,7 +29,6 @@ runs:
           -Source "${{ inputs.feed_url }}" \
           -StorePasswordInClearText \
           -Name GitHubPackages \
-          -UserName "${{ inputs.username }}"
 
     - name: Configure vcpkg nuget credentials (publish only)
       if: ${{ inputs.package_permission == 'true' }}
