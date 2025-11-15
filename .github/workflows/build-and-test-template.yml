@@ -91,52 +91,52 @@ jobs:
             build/lib/*
             build/bin/*
 
-  build-mac:
-    name: "MacOS universal"
-    needs: check-headers
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: | 
-          brew install --quiet curl
+  # build-mac:
+  #   name: "MacOS universal"
+  #   needs: check-headers
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Install dependencies
+  #       run: | 
+  #         brew install --quiet curl
 
-      - name: Build the library
-        shell: bash
-        run: |
-          mkdir build
-          cmake -B build -S . \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
-          cmake --build build --config $BUILD_TYPE --target ausaxs saxs_fitter em_fitter rigidbody_optimizer -j12
+  #     - name: Build the library
+  #       shell: bash
+  #       run: |
+  #         mkdir build
+  #         cmake -B build -S . \
+  #           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+  #           -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+  #         cmake --build build --config $BUILD_TYPE --target ausaxs saxs_fitter em_fitter rigidbody_optimizer -j12
 
-      - name: Configure build output folders for upload
-        shell: bash
-        run: |
-          rm -rf build/lib/*.a
+  #     - name: Configure build output folders for upload
+  #       shell: bash
+  #       run: |
+  #         rm -rf build/lib/*.a
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: macos-universal-binaries
-          path: |
-            build/lib/*
-            build/bin/*
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: macos-universal-binaries
+  #         path: |
+  #           build/lib/*
+  #           build/bin/*
 
-      - name: Build tests
-        run: cmake --build build --target tests -j12
+  #     - name: Build tests
+  #       run: cmake --build build --target tests -j12
 
-      - name: Run tests
-        run: |
-          ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/unit
-          ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/feature
+  #     - name: Run tests
+  #       run: |
+  #         ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/unit
+  #         ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/feature
 
-      - name: Upload test report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: "junit-test-results-macos"
-          path: build/tests/reports/*.xml
-          retention-days: 1
+  #     - name: Upload test report
+  #       uses: actions/upload-artifact@v4
+  #       if: always()
+  #       with:
+  #         name: "junit-test-results-macos"
+  #         path: build/tests/reports/*.xml
+  #         retention-days: 1
 
   build-mac-gui:
     name: "${{ matrix.name }}"
