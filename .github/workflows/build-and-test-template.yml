@@ -57,8 +57,6 @@ jobs:
           package_permission: ${{ inputs.package_permission }}
           feed_url: ${{ env.FEED_URL }}
           nuget_cmd: "$(vcpkg fetch nuget)"
-          username: ${{ env.USERNAME }}
-          packageaccess: ${{ secrets.PACKAGEACCESS }}
 
       - name: Install dependencies
         run: |
@@ -169,8 +167,6 @@ jobs:
             # CXX: $(brew --prefix llvm@18)/bin/clang++
             XCODE_VER: 15.0.1
     env:
-      USERNAME: AUSAXS
-      FEED_URL: https://nuget.pkg.github.com/AUSAXS/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AUSAXS/index.json${{ inputs.package_permission == true && ',readwrite' || '' }}"
 
     steps:
@@ -190,8 +186,6 @@ jobs:
           package_permission: ${{ inputs.package_permission }}
           feed_url: ${{ env.FEED_URL }}
           nuget_cmd: $("${{ steps.vcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}/vcpkg" fetch nuget | tail -n 1)
-          username: ${{ env.USERNAME }}
-          packageaccess: ${{ secrets.PACKAGEACCESS }}
       
       - uses: ./.github/actions/setup-vcpkg-nuget
         if: matrix.arch == 'x86_64'
@@ -199,8 +193,6 @@ jobs:
           package_permission: ${{ inputs.package_permission }}
           feed_url: ${{ env.FEED_URL }}
           nuget_cmd: 'mono $("${{ steps.vcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}/vcpkg" fetch nuget | tail -n 1)'
-          username: ${{ env.USERNAME }}
-          packageaccess: ${{ secrets.PACKAGEACCESS }}
   
       - name: Install dependencies
         run: |
