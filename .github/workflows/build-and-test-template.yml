@@ -44,7 +44,7 @@ jobs:
     needs: check-headers
     runs-on: windows-latest
     env:
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AUSAXS/index.json${{ inputs.package_permission == true && ',readwrite' || '' }}"
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AUSAXS/index.json,${{ inputs.package_permission && 'readwrite' || 'read' }}"
     steps:
       - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
@@ -53,7 +53,6 @@ jobs:
       - uses: ./.github/actions/setup-vcpkg-nuget
         with:
           package_permission: ${{ inputs.package_permission }}
-          feed_url: ${{ env.FEED_URL }}
           nuget_cmd: "$(vcpkg fetch nuget)"
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -91,52 +90,53 @@ jobs:
             build/lib/*
             build/bin/*
 
-  # build-mac:
-  #   name: "MacOS universal"
-  #   needs: check-headers
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Install dependencies
-  #       run: | 
-  #         brew install --quiet curl
+  build-mac:
+    if: false
+    name: "MacOS universal"
+    needs: check-headers
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: | 
+          brew install --quiet curl
 
-  #     - name: Build the library
-  #       shell: bash
-  #       run: |
-  #         mkdir build
-  #         cmake -B build -S . \
-  #           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-  #           -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
-  #         cmake --build build --config $BUILD_TYPE --target ausaxs saxs_fitter em_fitter rigidbody_optimizer -j12
+      - name: Build the library
+        shell: bash
+        run: |
+          mkdir build
+          cmake -B build -S . \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          cmake --build build --config $BUILD_TYPE --target ausaxs saxs_fitter em_fitter rigidbody_optimizer -j12
 
-  #     - name: Configure build output folders for upload
-  #       shell: bash
-  #       run: |
-  #         rm -rf build/lib/*.a
+      - name: Configure build output folders for upload
+        shell: bash
+        run: |
+          rm -rf build/lib/*.a
 
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: macos-universal-binaries
-  #         path: |
-  #           build/lib/*
-  #           build/bin/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal-binaries
+          path: |
+            build/lib/*
+            build/bin/*
 
-  #     - name: Build tests
-  #       run: cmake --build build --target tests -j12
+      - name: Build tests
+        run: cmake --build build --target tests -j12
 
-  #     - name: Run tests
-  #       run: |
-  #         ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/unit
-  #         ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/feature
+      - name: Run tests
+        run: |
+          ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/unit
+          ctest --output-on-failure --parallel 6 --repeat until-pass:3 --test-dir build/tests/feature
 
-  #     - name: Upload test report
-  #       uses: actions/upload-artifact@v4
-  #       if: always()
-  #       with:
-  #         name: "junit-test-results-macos"
-  #         path: build/tests/reports/*.xml
-  #         retention-days: 1
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "junit-test-results-macos"
+          path: build/tests/reports/*.xml
+          retention-days: 1
 
   build-mac-gui:
     name: "${{ matrix.name }}"
@@ -166,7 +166,7 @@ jobs:
             # CXX: $(brew --prefix llvm@18)/bin/clang++
             XCODE_VER: 15.0.1
     env:
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AUSAXS/index.json${{ inputs.package_permission == true && ',readwrite' || '' }}"
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AUSAXS/index.json,${{ inputs.package_permission && 'readwrite' || 'read' }}"
 
     steps:
       - uses: actions/checkout@v4
@@ -314,3 +314,49 @@ jobs:
           name: "junit-test-results-ubuntu"
           path: build/tests/reports/*.xml
           retention-days: 1
+
+  publish-test-results-ubuntu:
+    permissions:
+      checks: write
+
+    needs: build-ubuntu
+    name: "Publish test results"
+    runs-on: ubuntu-latest
+    if: needs.build-ubuntu.result == 'success'
+    steps:
+      - name: Download test report ubuntu
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: junit-test-results-ubuntu
+          path: ubuntu
+          workflow: ${{ github.event.workflow_run.name }}
+          run_id: ${{ github.event.workflow_run.id }}
+
+      - name: Publish test report ubuntu
+        uses: mikepenz/action-junit-report@v4
+        with:
+          commit: ${{github.event.workflow_run.head_sha}}
+          report_paths: 'ubuntu/junit-test-results-ubuntu/TEST-*.xml'
+
+  publish-test-results-macos:
+    permissions:
+      checks: write
+
+    needs: build-mac-gui
+    name: "Publish test results macos"
+    runs-on: ubuntu-latest
+    if: needs.build-mac-gui.result == 'success'
+    steps:
+      - name: Download test report macos
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: junit-test-results-macos
+          path: macos
+          workflow: ${{ github.event.workflow_run.name }}
+          run_id: ${{ github.event.workflow_run.id }}
+
+      - name: Publish test report macos
+        uses: mikepenz/action-junit-report@v4
+        with:
+          commit: ${{github.event.workflow_run.head_sha}}
+          report_paths: 'macos/junit-test-results-macos/TEST-*.xml'
