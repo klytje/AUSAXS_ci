@@ -10,6 +10,9 @@ inputs:
   nuget_cmd:
     required: true
     description: "Path to nuget.exe"
+  github_token:
+    required: true
+    description: "GitHub token with appropriate permissions"
 
 runs:
   using: "composite"
@@ -24,7 +27,7 @@ runs:
           -StorePasswordInClearText \
           -Name GitHubPackages \
           -UserName "${{ github }}" \
-          -Password "${{ secrets.GITHUB_TOKEN }}"
+          -Password "${{ inputs.github_token }}"
 
     - name: Configure vcpkg nuget credentials (publish only)
       if: ${{ inputs.package_permission == 'true' }}
@@ -36,7 +39,7 @@ runs:
           -StorePasswordInClearText \
           -Name GitHubPackages \
           -UserName "${{ github }}" \
-          -Password "${{ secrets.GITHUB_TOKEN }}"
+          -Password "${{ inputs.github_token }}"
         ${{ inputs.nuget_cmd }} \
-        setapikey "${{ secrets.GITHUB_TOKEN }}" \
+        setapikey "${{ inputs.github_token }}" \
         -Source "https://nuget.pkg.github.com/AUSAXS/index.json"
