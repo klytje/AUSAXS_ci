@@ -3,7 +3,6 @@ description: "Add vcpkg nuget feed"
 inputs:
   package_permission:
     required: true
-    type: boolean
     description: "Whether to configure publish-capable credentials
   nuget_cmd:
     required: true
