@@ -58,6 +58,7 @@ jobs:
           feed_url: ${{ env.FEED_URL }}
           nuget_cmd: "$(vcpkg fetch nuget)"
           username: ${{ env.USERNAME }}
+          packageaccess: ${{ secrets.PACKAGEACCESS }}
 
       - name: Install dependencies
         run: |
@@ -190,6 +191,7 @@ jobs:
           feed_url: ${{ env.FEED_URL }}
           nuget_cmd: $("${{ steps.vcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}/vcpkg" fetch nuget | tail -n 1)
           username: ${{ env.USERNAME }}
+          packageaccess: ${{ secrets.PACKAGEACCESS }}
       
       - uses: ./.github/actions/setup-vcpkg-nuget
         if: matrix.arch == 'x86_64'
@@ -198,6 +200,7 @@ jobs:
           feed_url: ${{ env.FEED_URL }}
           nuget_cmd: 'mono $("${{ steps.vcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}/vcpkg" fetch nuget | tail -n 1)'
           username: ${{ env.USERNAME }}
+          packageaccess: ${{ secrets.PACKAGEACCESS }}
   
       - name: Install dependencies
         run: |

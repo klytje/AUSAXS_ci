@@ -13,6 +13,9 @@ inputs:
   username:
     required: true
     description: "Username for the feed"
+  packageaccess:
+    required: false
+    description: "Package feed API key (pass from workflow secrets when package_permission=true)"
 
 runs:
   using: "composite"
@@ -38,7 +41,7 @@ runs:
           -StorePasswordInClearText \
           -Name GitHubPackages \
           -UserName "${{ inputs.username }}" \
-          -Password "${{ secrets.PACKAGEACCESS }}"
+          -Password "${{ inputs.packageaccess }}"
         ${{ inputs.nuget_cmd }} \
-        setapikey "${{ secrets.PACKAGEACCESS }}" \
+        setapikey "${{ inputs.packageaccess }}" \
         -Source "${{ inputs.feed_url }}"
